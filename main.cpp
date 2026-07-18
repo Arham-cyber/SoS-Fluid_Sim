@@ -1,6 +1,6 @@
 #define for_all_particles for(int i = 0; i < num_particles; i++)
 #define curr_particle particles[i]
-#define elasticity 0.3f
+#define elasticity 0.4f
 
 
 #include <SFML/Graphics.hpp>
@@ -8,10 +8,10 @@
 // #include "backends/imgui_impl_win32.h"
 // #include "imgui/backends/imgui_impl_dx11.h"
 
-const float err = 0.2f;
-const int num_particles = 100;
-const float radius = 4.f;
-
+const int num_particles = 2000000;
+const float radius = 1.f;
+const float gravity = 300.f;
+const float err = 0.0001;
 struct particle {
     sf::Vector2f position;
     sf::Vector2f velocity;
@@ -25,17 +25,17 @@ particle generate_particle(auto windowSize){
    
     particle particle;
 
-    particle.position = {((rand() % windowSize.x)-20),((rand() % windowSize.y)-20)};
-    particle.velocity = {((rand() % 101) - 50),((rand() % 101) - 50)};
-    particle.acceleration = {0, 200};
+    particle.position = {((rand() % (windowSize.x - 19)) + 20),((rand() % (windowSize.y - 19)) + 20)};
+    particle.velocity = {((rand() % 1001) - 500),((rand() % 1001) - 500)};
+    particle.acceleration = {0, gravity};
     
 return particle;
 }
 
 void update_particles(float time, auto windowSize){
     for_all_particles{
-        particles[i].position += particles[i].velocity * time;
         particles[i].velocity += particles[i].acceleration * time;
+        particles[i].position += particles[i].velocity * time;
 
 
         if(curr_particle.position.x <= 0 ){
@@ -84,7 +84,9 @@ int main()
     // triangle[2].color = sf::Color::Green;
     
     sf::Clock clock;
-    sf :: CircleShape circle;
+    // sf :: CircleShape circle(radius);
+    sf::VertexArray vertices(sf::PrimitiveType::Triangles, num_particles * 6);
+    // circle.setFillColor(sf::Color::Cyan);
     
     while (window.isOpen())
     {
@@ -98,14 +100,21 @@ int main()
 
         window.clear();
        for_all_particles{
-            circle.setRadius(radius);
-            circle.setFillColor(sf::Color::Cyan);
-            circle.setPosition(curr_particle.position);
+        //    circle.setPosition(curr_particle.position);
+        //    window.draw(circle);
+        vertices[i*6].position = curr_particle.position;
+        vertices[(i*6)+1].position = curr_particle.position + sf::Vector2f(0, 2*radius);
+        vertices[(i*6)+2].position = curr_particle.position + sf::Vector2f(2*radius, 0);
+        vertices[(i*6)+3].position = curr_particle.position + sf::Vector2f(0, 2*radius);
+        vertices[(i*6)+4].position = curr_particle.position + sf::Vector2f(2* radius, 2*radius);
+        vertices[(i*6)+5].position = curr_particle.position + sf::Vector2f(2*radius,0);
 
-            window.draw(circle);
+        for(int j = 0; j < 6; j++){
+            vertices[(i*6)+j].color = sf::Color::Cyan;
         }
-
+        }
         update_particles(deltaTime, windowSize);
+        window.draw(vertices);
         // window.draw(shape);
         // window.draw(triangle);
         window.display();
